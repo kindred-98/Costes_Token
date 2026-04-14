@@ -36,7 +36,7 @@ jobs:
         run: pip install ruff && ruff check src/ tests/
       
       - name: Run tests with coverage
-        run: pytest tests/ -v --cov=src --cov-report=xml --cov-fail-under=80
+        run: pytest tests/ -v --cov=src --cov-report=xml --cov-config=.coveragerc --cov-fail-under=80
       
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
