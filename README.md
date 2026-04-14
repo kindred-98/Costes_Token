@@ -127,8 +127,8 @@ proyecto/
 │   ├── test_config.py
 │   ├── test_precios.py
 │   └── test_proyecciones.py
-├── 📖 docs/                        # ▸ Documentación
-└── ⚙️ .github/workflows/           # ▸ Pipeline CI/CD
+├── 📖 docs/                         # ▸ Documentación
+└── ⚙️ .github/workflows/            # ▸ Pipeline CI/CD
     └── ci.yml
 ```
 
@@ -204,7 +204,7 @@ Este proyecto está bajo la licencia **MIT**.
 |-------------|---------|
 | 👤 **Nombre** | **A.D.E.V** |
 | 📧 **Email** | angelechenique134@gmail.com |
-| 🐙 **GitHub** | [tu-usuario](https://github.com/tu-usuario) |
+| 🐙 **GitHub** | [![GitHub](https://img.shields.io/badge/GitHub-kindred--98-181717?style=for-the-badge&logo=github)](https://github.com/kindred-98) |
 | 🏢 **Organización** | Kindred |
 
 ---

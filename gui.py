@@ -26,7 +26,7 @@ class App(ctk.CTk):
         self.lbl_modelo = ctk.CTkLabel(
             self.frame_selector,
             text="Modelo de IA",
-            font=("Comic Sans MS", 14, "bold"),
+            font=("self.Comic Sans MS", 14, "bold"),
             text_color="#2c3e50"
         )
         self.lbl_modelo.pack(pady=(8, 0), padx=10, anchor="w")
@@ -55,7 +55,8 @@ class App(ctk.CTk):
             self.frame_text,
             height=80,
             width=9000,
-            corner_radius=10
+            corner_radius=10,
+            font=("Comic Sans MS", 14)
         )
         self.txt_input.pack(anchor="w", padx=10, pady=(5, 10))
 
