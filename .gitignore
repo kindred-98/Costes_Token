@@ -40,3 +40,6 @@ Thumbs.db
 *.key
 credentials.json
 api_keys.py
+
+# Datos del curso (no es código del proyecto)
+Informacion_De_Inicio/

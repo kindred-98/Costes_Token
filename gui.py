@@ -7,15 +7,17 @@ from src import CalculadoraCostes, ProyeccionMensual, estimar_tokens
 import customtkinter as ctk
 
 # ─── CONFIGURACIÓN GLOBAL DE TEMA (va ANTES de crear la ventana) ───
-ctk.set_appearance_mode("dark")          # fondo oscuro #2b2b2b
-ctk.set_default_color_theme("dark-blue") # acento azul en widgets
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("dark-blue")
+
 
 class CalculadoraApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Calculadora de Costes de APIs de IA")
-        self.geometry("420x580")
+        self.geometry("550x700")
         self.resizable(False, False)
+        self._modo_oscuro = True
         self._construir_gui()
 
     def _construir_gui(self):
@@ -42,30 +44,40 @@ class CalculadoraApp(ctk.CTk):
 
         ctk.CTkButton(
             fila_botones, text="Calcular Costes",
-            fg_color="#1a1a1a",          # negro apagado
+            fg_color="#1a1a1a",
             hover_color="#333",
             command=self._calcular
         ).pack(side="left", padx=(0, 8))
 
         ctk.CTkButton(
             fila_botones, text="Limpiar",
-            fg_color="#3a3a3a",          # gris medio
+            fg_color="#3a3a3a",
             hover_color="#555",
             command=self._limpiar
         ).pack(side="left", padx=(0, 8))
 
         ctk.CTkButton(
             fila_botones, text="Salir",
-            fg_color="#c0392b",          # rojo igual que la imagen
+            fg_color="#c0392b",
             hover_color="#e74c3c",
             command=self.destroy
-        ).pack(side="left")
+        ).pack(side="left", padx=(0, 8))
+
+        # ── Botón de tema ──
+        self.btn_tema = ctk.CTkButton(
+            fila_botones, text="☀",
+            width=36,
+            fg_color="#3a3a3a",
+            hover_color="#555",
+            command=self._cambiar_tema
+        )
+        self.btn_tema.pack(side="left")
 
         # ── Título Resultados ──
         ctk.CTkLabel(
             self, text="Resultados",
             font=ctk.CTkFont(size=14, weight="bold"),
-            text_color="#4fc3f7",        # azul claro
+            text_color="#4fc3f7",
             anchor="w"
         ).pack(fill="x", padx=20, pady=(0, 8))
 
@@ -83,10 +95,10 @@ class CalculadoraApp(ctk.CTk):
 
         self.lbl_entrada  = ctk.CTkLabel(self.frame_tokens, text="⬆  Entrada: —", anchor="w", text_color="#aaa")
         self.lbl_salida   = ctk.CTkLabel(self.frame_tokens, text="⬇  Salida (estimada): —", anchor="w", text_color="#aaa")
-        self.lbl_total_tk = ctk.CTkLabel(self.frame_tokens, text="⬇  Total: —", anchor="w", text_color="#aaa")
+        self.lbl_total_tk = ctk.CTkLabel(self.frame_tokens, text="▣  Total: —", anchor="w", text_color="#aaa")
         for lbl in (self.lbl_entrada, self.lbl_salida, self.lbl_total_tk):
             lbl.pack(fill="x", padx=12, pady=1)
-        ctk.CTkLabel(self.frame_tokens, text="").pack(pady=2)  # spacer
+        ctk.CTkLabel(self.frame_tokens, text="").pack(pady=2)
 
         # ── Tarjeta Costes (fondo ámbar oscuro) ──
         self.frame_costes = ctk.CTkFrame(
@@ -107,18 +119,36 @@ class CalculadoraApp(ctk.CTk):
             lbl.pack(fill="x", padx=12, pady=1)
         ctk.CTkLabel(self.frame_costes, text="").pack(pady=2)
 
+    # ── Lógica ──────────────────────────────────────────────────────
+
+    def _cambiar_tema(self):
+        if self._modo_oscuro:
+            ctk.set_appearance_mode("light")
+            self._modo_oscuro = False
+            self.btn_tema.configure(text="🌙")
+            # Adaptar tarjetas al modo claro
+            self.frame_tokens.configure(fg_color="#d6ecd6")
+            self.frame_costes.configure(fg_color="#f5e6cc")
+        else:
+            ctk.set_appearance_mode("dark")
+            self._modo_oscuro = True
+            self.btn_tema.configure(text="☀")
+            # Restaurar tarjetas al modo oscuro
+            self.frame_tokens.configure(fg_color="#2d3d2d")
+            self.frame_costes.configure(fg_color="#3d2d1a")
+
     def _calcular(self):
         modelo = self.entry_modelo.get().strip() or "gpt-4o"
         texto = self.texto_entrada.get("1.0", "end").strip()
-        
+
         if not texto:
             return
-        
+
         try:
             tokens_entrada = estimar_tokens(texto, modelo)
-        except:
+        except Exception:
             tokens_entrada = max(1, len(texto.split()))
-        
+
         tokens_salida = 200
         total = tokens_entrada + tokens_salida
 
@@ -126,9 +156,9 @@ class CalculadoraApp(ctk.CTk):
             calc = CalculadoraCostes(modelo)
             coste = calc.calcular_costes(tokens_entrada, tokens_salida)
             costo_usd = coste.coste_total_usd
-        except:
+        except Exception:
             precio_entrada_usd = 0.000005
-            precio_salida_usd = 0.000015
+            precio_salida_usd  = 0.000015
             costo_usd = tokens_entrada * precio_entrada_usd + tokens_salida * precio_salida_usd
 
         costo_eur = costo_usd * 0.92
