@@ -1,184 +1,184 @@
-"""Interfaz de escritorio para Calculadora de Costes."""
-
-import tkinter as tk
-from tkinter import ttk, messagebox
-from src import CalculadoraCostes, ProyeccionMensual, estimar_tokens
+"""Interfaz de escritorio para Calculadora de Costes (versión clon compañero)."""
 
 import customtkinter as ctk
+from src.calculo import CalculadoraCostes
+from src.tokens import estimar_tokens
+from src.precios import listar_modelos
 
-# ─── CONFIGURACIÓN GLOBAL DE TEMA (va ANTES de crear la ventana) ───
-ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("dark-blue")
+ctk.set_appearance_mode("light")
+ctk.set_default_color_theme("blue")
 
 
-class CalculadoraApp(ctk.CTk):
+class App(ctk.CTk):
     def __init__(self):
         super().__init__()
+
         self.title("Calculadora de Costes de APIs de IA")
-        self.geometry("550x700")
+        self.geometry("600x700")
         self.resizable(False, False)
-        self._modo_oscuro = True
-        self._construir_gui()
 
-    def _construir_gui(self):
-        PAD = {"padx": 20, "pady": (0, 10)}
+        self.calc = CalculadoraCostes()
 
-        # ── Etiqueta + Entry: Modelo de IA ──
-        ctk.CTkLabel(self, text="Modelo de IA", anchor="w").pack(
-            fill="x", padx=20, pady=(20, 4)
+        # --- UI: Selección de Modelo ---
+        self.frame_selector = ctk.CTkFrame(self, fg_color="#e8e8e8")
+        self.frame_selector.pack(pady=10, padx=10, fill="x")
+
+        self.lbl_modelo = ctk.CTkLabel(
+            self.frame_selector,
+            text="Modelo de IA",
+            font=("Comic Sans MS", 14, "bold"),
+            text_color="#2c3e50"
         )
-        self.entry_modelo = ctk.CTkEntry(self, placeholder_text="gpt-4o")
-        self.entry_modelo.pack(fill="x", **PAD)
-        self.entry_modelo.insert(0, "gpt-4o")
+        self.lbl_modelo.pack(pady=(8, 0), padx=10, anchor="w")
 
-        # ── Etiqueta + Textbox: Texto a analizar ──
-        ctk.CTkLabel(self, text="Texto a analizar", anchor="w").pack(
-            fill="x", padx=20, pady=(10, 4)
+        self.combo_modelo = ctk.CTkComboBox(
+            self.frame_selector,
+            values=listar_modelos(),
+            width=9000
         )
-        self.texto_entrada = ctk.CTkTextbox(self, height=80)
-        self.texto_entrada.pack(fill="x", **PAD)
+        self.combo_modelo.set("gpt-4o")
+        self.combo_modelo.pack(anchor="w", padx=10, pady=(0, 10))
 
-        # ── Fila de botones ──
-        fila_botones = ctk.CTkFrame(self, fg_color="transparent")
-        fila_botones.pack(fill="x", padx=20, pady=(6, 16))
+        # --- UI: Texto a analizar ---
+        self.frame_text = ctk.CTkFrame(self, fg_color="#e8e8e8")
+        self.frame_text.pack(pady=0, padx=10, fill="x")
 
-        ctk.CTkButton(
-            fila_botones, text="Calcular Costes",
-            fg_color="#1a1a1a",
-            hover_color="#333",
-            command=self._calcular
-        ).pack(side="left", padx=(0, 8))
-
-        ctk.CTkButton(
-            fila_botones, text="Limpiar",
-            fg_color="#3a3a3a",
-            hover_color="#555",
-            command=self._limpiar
-        ).pack(side="left", padx=(0, 8))
-
-        ctk.CTkButton(
-            fila_botones, text="Salir",
-            fg_color="#c0392b",
-            hover_color="#e74c3c",
-            command=self.destroy
-        ).pack(side="left", padx=(0, 8))
-
-        # ── Botón de tema ──
-        self.btn_tema = ctk.CTkButton(
-            fila_botones, text="☀",
-            width=36,
-            fg_color="#3a3a3a",
-            hover_color="#555",
-            command=self._cambiar_tema
+        self.lbl_texto = ctk.CTkLabel(
+            self.frame_text,
+            text="Texto a analizar",
+            font=("Comic Sans MS", 14, "bold"),
+            text_color="#2c3e50"
         )
-        self.btn_tema.pack(side="left")
+        self.lbl_texto.pack(pady=(10, 5), padx=10, anchor="w")
 
-        # ── Título Resultados ──
-        ctk.CTkLabel(
-            self, text="Resultados",
-            font=ctk.CTkFont(size=14, weight="bold"),
-            text_color="#4fc3f7",
-            anchor="w"
-        ).pack(fill="x", padx=20, pady=(0, 8))
-
-        # ── Tarjeta Tokens (fondo verde oscuro) ──
-        self.frame_tokens = ctk.CTkFrame(
-            self, fg_color="#2d3d2d", corner_radius=8
+        self.txt_input = ctk.CTkTextbox(
+            self.frame_text,
+            height=80,
+            width=9000,
+            corner_radius=10
         )
-        self.frame_tokens.pack(fill="x", padx=20, pady=(0, 10))
+        self.txt_input.pack(anchor="w", padx=10, pady=(5, 10))
 
-        ctk.CTkLabel(
-            self.frame_tokens, text="● Tokens",
-            text_color="#81c784", anchor="w",
-            font=ctk.CTkFont(weight="bold")
-        ).pack(fill="x", padx=12, pady=(8, 2))
+        # --- UI: Botones ---
+        self.frame_btns = ctk.CTkFrame(self, fg_color="transparent")
+        self.frame_btns.pack(pady=10, fill="x")
 
-        self.lbl_entrada  = ctk.CTkLabel(self.frame_tokens, text="⬆  Entrada: —", anchor="w", text_color="#aaa")
-        self.lbl_salida   = ctk.CTkLabel(self.frame_tokens, text="⬇  Salida (estimada): —", anchor="w", text_color="#aaa")
-        self.lbl_total_tk = ctk.CTkLabel(self.frame_tokens, text="▣  Total: —", anchor="w", text_color="#aaa")
-        for lbl in (self.lbl_entrada, self.lbl_salida, self.lbl_total_tk):
-            lbl.pack(fill="x", padx=12, pady=1)
-        ctk.CTkLabel(self.frame_tokens, text="").pack(pady=2)
-
-        # ── Tarjeta Costes (fondo ámbar oscuro) ──
-        self.frame_costes = ctk.CTkFrame(
-            self, fg_color="#3d2d1a", corner_radius=8
+        self.btn_calc = ctk.CTkButton(
+            self.frame_btns,
+            height=40,
+            text="Calcular Costes",
+            font=("Comic Sans MS", 14, "bold"),
+            fg_color="#2c3e50",
+            hover_color="#34495e",
+            command=self.ejecutar_calculo
         )
-        self.frame_costes.pack(fill="x", padx=20, pady=(0, 16))
+        self.btn_calc.pack(side="left", padx=5)
+
+        self.btn_clear = ctk.CTkButton(
+            self.frame_btns,
+            height=40,
+            text="Limpiar",
+            font=("Comic Sans MS", 14, "bold"),
+            fg_color="#7f8c8d",
+            hover_color="#95a5a6",
+            command=self.limpiar
+        )
+        self.btn_clear.pack(side="left", padx=5)
+
+        self.btn_exit = ctk.CTkButton(
+            self.frame_btns,
+            height=40,
+            text="Salir",
+            font=("Comic Sans MS", 14, "bold"),
+            fg_color="#e74c3c",
+            hover_color="#c0392b",
+            command=self.quit
+        )
+        self.btn_exit.pack(side="left", padx=5)
+
+        # --- UI: Resultados ---
+        self.frame_resultados = ctk.CTkFrame(self, fg_color="#e8e8e8", corner_radius=10)
+        self.frame_resultados.pack(pady=0, padx=5, fill="x")
 
         ctk.CTkLabel(
-            self.frame_costes, text="● Costes",
-            text_color="#ffb74d", anchor="w",
-            font=ctk.CTkFont(weight="bold")
-        ).pack(fill="x", padx=12, pady=(8, 2))
+            self.frame_resultados,
+            text="Resultados",
+            font=("Comic Sans MS", 16, "bold"),
+            text_color="#2c3e50"
+        ).pack(anchor="w", padx=15, pady=10)
 
-        self.lbl_euros    = ctk.CTkLabel(self.frame_costes, text="💶  Euros:      —", anchor="w", text_color="#aaa")
-        self.lbl_dolares  = ctk.CTkLabel(self.frame_costes, text="💵  Dólar:      —", anchor="w", text_color="#aaa")
-        self.lbl_centimos = ctk.CTkLabel(self.frame_costes, text="¢   Céntimos:  —", anchor="w", text_color="#aaa")
-        for lbl in (self.lbl_euros, self.lbl_dolares, self.lbl_centimos):
-            lbl.pack(fill="x", padx=12, pady=1)
-        ctk.CTkLabel(self.frame_costes, text="").pack(pady=2)
+        # Tokens
+        self.frame_tokens = ctk.CTkFrame(self.frame_resultados, fg_color="#eafaf1", corner_radius=10)
+        self.frame_tokens.pack(pady=7, padx=20, fill="x")
 
-    # ── Lógica ──────────────────────────────────────────────────────
+        ctk.CTkLabel(
+            self.frame_tokens,
+            text="Tokens",
+            font=("Comic Sans MS", 13, "bold"),
+            text_color="#2c3e50"
+        ).pack(anchor="w", padx=20, pady=5)
 
-    def _cambiar_tema(self):
-        if self._modo_oscuro:
-            ctk.set_appearance_mode("light")
-            self._modo_oscuro = False
-            self.btn_tema.configure(text="🌙")
-            # Adaptar tarjetas al modo claro
-            self.frame_tokens.configure(fg_color="#d6ecd6")
-            self.frame_costes.configure(fg_color="#f5e6cc")
-        else:
-            ctk.set_appearance_mode("dark")
-            self._modo_oscuro = True
-            self.btn_tema.configure(text="☀")
-            # Restaurar tarjetas al modo oscuro
-            self.frame_tokens.configure(fg_color="#2d3d2d")
-            self.frame_costes.configure(fg_color="#3d2d1a")
+        self.frame_tokens2 = ctk.CTkFrame(self.frame_tokens, fg_color="#ffffff", corner_radius=7)
+        self.frame_tokens2.pack(pady=(3, 10), padx=10, fill="x")
 
-    def _calcular(self):
-        modelo = self.entry_modelo.get().strip() or "gpt-4o"
-        texto = self.texto_entrada.get("1.0", "end").strip()
+        self.res_tokens = ctk.CTkLabel(
+            self.frame_tokens2,
+            text="\n\n\n",
+            justify="left",
+            font=("Comic Sans MS", 14)
+        )
+        self.res_tokens.pack(anchor="nw", padx=(2, 5), pady=5)
 
-        if not texto:
-            return
+        # Costes
+        self.frame_costes = ctk.CTkFrame(self.frame_resultados, fg_color="#dae8fc", corner_radius=10)
+        self.frame_costes.pack(pady=7, padx=20, fill="x")
 
-        try:
-            tokens_entrada = estimar_tokens(texto, modelo)
-        except Exception:
-            tokens_entrada = max(1, len(texto.split()))
+        ctk.CTkLabel(
+            self.frame_costes,
+            text="Costes",
+            font=("Comic Sans MS", 13, "bold"),
+            text_color="#2c3e50"
+        ).pack(anchor="w", padx=20, pady=5)
 
-        tokens_salida = 200
-        total = tokens_entrada + tokens_salida
+        self.frame_costes2 = ctk.CTkFrame(self.frame_costes, fg_color="#ffffff", corner_radius=7)
+        self.frame_costes2.pack(pady=(3, 10), padx=10, fill="x")
 
-        try:
-            calc = CalculadoraCostes(modelo)
-            coste = calc.calcular_costes(tokens_entrada, tokens_salida)
-            costo_usd = coste.coste_total_usd
-        except Exception:
-            precio_entrada_usd = 0.000005
-            precio_salida_usd  = 0.000015
-            costo_usd = tokens_entrada * precio_entrada_usd + tokens_salida * precio_salida_usd
+        self.res_costes = ctk.CTkLabel(
+            self.frame_costes2,
+            text="\n\n\n",
+            justify="left",
+            font=("Comic Sans MS", 14)
+        )
+        self.res_costes.pack(anchor="nw", padx=(2, 5), pady=5)
 
-        costo_eur = costo_usd * 0.92
-        costo_cts = costo_eur * 100
+    def ejecutar_calculo(self):
+        modelo = self.combo_modelo.get()
+        texto = self.txt_input.get("1.0", "end-1c")
 
-        self.lbl_entrada.configure(text=f"⬆  Entrada: {tokens_entrada} tokens")
-        self.lbl_salida.configure(text=f"⬇  Salida (estimada): {tokens_salida} tokens")
-        self.lbl_total_tk.configure(text=f"▣  Total: {total} tokens")
-        self.lbl_euros.configure(text=f"💶  Euros:      {costo_eur:.6f} €")
-        self.lbl_dolares.configure(text=f"💵  Dólar:      {costo_usd:.6f} $")
-        self.lbl_centimos.configure(text=f"¢   Céntimos:  {costo_cts:.4f} cts")
+        self.calc = CalculadoraCostes(modelo)  # Actualizar modelo
 
-    def _limpiar(self):
-        self.texto_entrada.delete("1.0", "end")
-        for lbl in (self.lbl_entrada, self.lbl_salida, self.lbl_total_tk,
-                    self.lbl_euros, self.lbl_dolares, self.lbl_centimos):
-            texto_original = lbl.cget("text").split(":")[0]
-            lbl.configure(text=f"{texto_original}: —")
+        t_in = estimar_tokens(texto, modelo)
+        t_out = 200
+        res = self.calc.calcular_costes(t_in, t_out)
+
+        self.res_tokens.configure(text=(
+            f"📥 Entrada: {t_in} tokens\n"
+            f"📤 Salida (estimada): {t_out} tokens\n"
+            f"📊 Total: {t_in + t_out} tokens\n"
+        ))
+
+        self.res_costes.configure(text=(
+            f"💶 Euros: {res.coste_total_usd * 0.9:.6f}€\n"
+            f"💵 Dólar: {res.coste_total_usd:.6f} $\n"
+            f"₵ Céntimos: {res.coste_total_cent:.4f} cts\n"
+        ))
+
+    def limpiar(self):
+        self.txt_input.delete("1.0", "end")
+        self.res_tokens.configure(text="")
+        self.res_costes.configure(text="")
 
 
 if __name__ == "__main__":
-    app = CalculadoraApp()
+    app = App()
     app.mainloop()
