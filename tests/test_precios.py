@@ -28,6 +28,24 @@ class TestObtenerPrecios:
         precios = obtener_precios("gemini-1.5-flash")
         assert precios["input"] == 0.075
         assert precios["output"] == 0.30
+    
+    def test_obtener_precios_gpt4_turbo(self):
+        """Caso feliz: obtener precios de gpt-4-turbo."""
+        precios = obtener_precios("gpt-4-turbo")
+        assert precios["input"] == 10.00
+        assert precios["output"] == 30.00
+    
+    def test_obtener_precios_claude3_sonnet(self):
+        """Caso feliz: obtener precios de claude-3-sonnet."""
+        precios = obtener_precios("claude-3-sonnet")
+        assert precios["input"] == 3.00
+        assert precios["output"] == 15.00
+    
+    def test_obtener_precios_gemini_pro(self):
+        """Caso feliz: obtener precios de gemini-1.5-pro."""
+        precios = obtener_precios("gemini-1.5-pro")
+        assert precios["input"] == 1.25
+        assert precios["output"] == 5.00
 
 
 class TestListarModelos:

@@ -83,6 +83,38 @@ class TestProyectar:
             proj = ProyeccionMensual(modelo)
             resultado = proj.proyectar(10, 100, 50, validar=False)
             assert resultado.coste_total_usd > 0
+    
+    def test_proyectar_tokens_input_negativo(self):
+        """Caso error: tokens_input negativo con validación."""
+        proj = ProyeccionMensual("gpt-4o-mini")
+        with pytest.raises(ValueError, match="tokens_input"):
+            proj.proyectar(
+                llamadas_por_dia=10,
+                tokens_input_por_llamada=-100,
+                tokens_output_por_llamada=100
+            )
+    
+    def test_proyectar_tokens_output_negativo(self):
+        """Caso error: tokens_output negativo con validación."""
+        proj = ProyeccionMensual("gpt-4o-mini")
+        with pytest.raises(ValueError, match="tokens_output"):
+            proj.proyectar(
+                llamadas_por_dia=10,
+                tokens_input_por_llamada=100,
+                tokens_output_por_llamada=-100
+            )
+    
+    def test_proyectar_dias_mes_custom(self):
+        """Caso feliz: días de mes personalizado."""
+        proj = ProyeccionMensual("gpt-4o-mini")
+        resultado = proj.proyectar(
+            llamadas_por_dia=10,
+            tokens_input_por_llamada=100,
+            tokens_output_por_llamada=100,
+            dias_mes=28,
+            validar=False
+        )
+        assert resultado.llamadas_mensuales == 280
 
 
 class TestResultadoProyeccion:
