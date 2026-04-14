@@ -1,7 +1,7 @@
 """Tests para el módulo config.py."""
 
 import os
-import pytest
+import pytest  # noqa: F401
 from unittest.mock import patch
 from src.config import load_env, get_api_key, get_token
 
