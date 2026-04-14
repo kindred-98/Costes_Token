@@ -1,6 +1,5 @@
 """Tests para el módulo precios.py."""
 
-import pytest
 from src.precios import PRECIOS, obtener_precios, listar_modelos
 
 
