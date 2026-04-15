@@ -48,16 +48,16 @@ print(f"Coste: {resultado.coste_total_usd} USD")
 ## Estructura del proyecto
 
 ```
-proyecto/
-├── main.py           # Punto de entrada
-├── gui.py           # Interfaz de escritorio
-├── requirements.txt # Dependencias
-├── src/            # Código fuente
+proyecto/   
+├── main.py                         # Punto de entrada
+├── gui.py                          # Interfaz de escritorio
+├── requirements.txt                # Dependencias
+├── src/                            # Código fuente
 │   ├── precios.py
 │   ├── tokens.py
 │   ├── calculo.py
 │   └── proyecciones.py
-└── tests/         # Tests unitarios
+└── tests/                          # Tests unitarios
 ```
 
 ## Tests
@@ -77,7 +77,8 @@ GitHub Actions ejecuta:
 ## Licencia
 
 MIT
-```
+
+---
 
 ## 5.3 — Commits semánticos
 
